@@ -281,6 +281,38 @@ def test_elections_voting_thankyou_redirect(client: FlaskClient, load_metadir):
     assert message_text == 'To re-cast your vote, please visit the election page.'
 
 
+def test_elections_candidate_skips_empty_fields(client: FlaskClient, load_metadir):
+    import os
+    import yaml
+
+    election_dir = os.path.join(str(load_metadir), 'elections', '2021', 'GB')
+    election_path = os.path.join(election_dir, 'election.yaml')
+    with open(election_path) as f:
+        election = yaml.safe_load(f)
+    election['show_candidate_fields'] = ['employer', 'slack']
+    with open(election_path, 'w') as f:
+        yaml.safe_dump(election, f)
+
+    with open(os.path.join(election_dir, 'candidate-nofields.md'), 'w') as f:
+        f.write('-------------------------------------------------------------\n'
+                'name: No Fields\n'
+                'ID: nofields\n'
+                'info:\n'
+                '  - employer: Acme\n'
+                '-------------------------------------------------------------\n'
+                '\n'
+                'Only the employer field is given.\n')
+
+    provision_session(client, token='...')
+    response = client.get('/app/elections/2021---GB/candidates/nofields')
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.data, 'html.parser')
+
+    labels = [p.find('small').text.strip() for p in soup.find_all('p', attrs={'class': 'banner-subtitle space-lr'})]
+    assert 'employer' in labels
+    assert 'slack' not in labels
+
+
 @mock.patch('elekto.controllers.elections.encrypt')
 def test_elections_voting_post(encrypt_mock, client: FlaskClient, load_metadir):
     encrypt_mock.return_value = ENCRYPTED_MESSAGE
