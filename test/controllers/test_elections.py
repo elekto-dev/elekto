@@ -1,8 +1,10 @@
+import os
 import re
 from datetime import datetime
 from unittest import mock
 
 import pytest
+import yaml
 from bs4 import BeautifulSoup
 from flask.testing import FlaskClient
 from freezegun import freeze_time
@@ -258,6 +260,22 @@ def test_elections_candidate(client: FlaskClient, load_metadir):
 
     description_text = soup.find('div', attrs={'class': 'description space-lr'}).text.strip()
     assert description_text == 'Davanum Srinivas is a current member of the Steering Committee, and has been a member of the CNCF TOC.'
+
+
+def test_elections_candidate_without_show_candidate_fields(client: FlaskClient, metadir, load_metadir):
+    election_yaml = os.path.join(str(metadir), 'elections', '2021', 'GB', 'election.yaml')
+    with open(election_yaml) as f:
+        config = yaml.safe_load(f)
+    del config['show_candidate_fields']
+    with open(election_yaml, 'w') as f:
+        yaml.safe_dump(config, f)
+    provision_session(client, token='...')
+
+    response = client.get('/app/elections/2021---GB/candidates/dims')
+
+    assert response.status_code == 200
+    subtitles = BeautifulSoup(response.data, 'html.parser').find_all('p', attrs={'class': 'banner-subtitle space-lr'})
+    assert [s.text.strip() for s in subtitles] == ['dims | Running for Select our 2021 General Board Rep']
 
 
 # -------------------------------------------------------------------------------------------------------------------- #

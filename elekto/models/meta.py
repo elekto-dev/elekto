@@ -136,9 +136,7 @@ class Election(Meta):
         return utils.parse_yaml(os.path.join(self.path, Election.VOT))
         
     def showfields(self):
-        # FIXME: show_candidate_fields could be None (as is the case in the name_the_app example meta), leading to an
-        #  error if showfields() is called. See: https://github.com/elekto-dev/elekto/issues/98
-        return dict.fromkeys(self.election['show_candidate_fields'], '')
+        return dict.fromkeys(self.election.get('show_candidate_fields') or [], '')
 
     def candidates(self):
         """

@@ -73,6 +73,16 @@ def test_show_fields_empty(election):
     assert election.showfields() == {}
 
 
+def test_show_fields_missing(election):
+    election.election.pop('show_candidate_fields', None)
+    assert election.showfields() == {}
+
+
+def test_show_fields_none(election):
+    election.election['show_candidate_fields'] = None
+    assert election.showfields() == {}
+
+
 def test_show_fields(election):
     election.election['show_candidate_fields'] = ['name']
     assert election.showfields() == {'name': ''}
