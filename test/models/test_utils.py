@@ -188,3 +188,25 @@ def test_parse_md_file_error(metadir):
 def test_parse_md_generic_error(open_mock):
     open_mock.side_effect = Exception
     assert parse_md('') == 'Markdown format not Correct'
+
+
+def candidate_md_with_info(info_block: str) -> str:
+    sep = '-' * 61
+    return f'{sep}\nname: Jane Doe\nID: jdoe\n{info_block}{sep}\n\n## Bio\n'
+
+
+@pytest.mark.parametrize('info_block,expected', [
+    ('info:\n  slack: @jdoe\n', {'slack': '@jdoe'}),
+    ('info:\n  - slack: @jdoe\n', [{'slack': '@jdoe'}]),
+    ("info:\n  slack: '@jdoe'\n", {'slack': '@jdoe'}),
+    ('info:\n  slack: "@jdoe"\n', {'slack': '@jdoe'}),
+    ('info:\n  slack: jdoe@example.com\n', {'slack': 'jdoe@example.com'}),
+])
+def test_extract_candidate_info_at_sign(info_block, expected):
+    info = extract_candidate_info(candidate_md_with_info(info_block))
+    assert info['info'] == expected
+
+
+def test_extract_candidate_info_malformed_still_raises():
+    with pytest.raises(Exception):
+        extract_candidate_info(candidate_md_with_info('info:\n  slack: [unclosed\n'))

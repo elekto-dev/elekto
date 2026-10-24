@@ -15,6 +15,7 @@
 # Author(s):         Manish Sahani <rec.manish.sahani@gmail.com>
 
 import os
+import re
 import yaml
 import markdown2 as markdown
 
@@ -26,6 +27,9 @@ try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader
+
+# A bare value starting with @ (e.g. `slack: @alice`) is not valid YAML.
+AT_VALUE = re.compile(r"^(\s*(?:-\s*)?[\w-]+:\s*)(@\S*)\s*$", re.MULTILINE)
 
 
 def parse_yaml(yaml_path):
@@ -73,6 +77,7 @@ def extract_candidate_info(md):
         len(constants.CAND_START_DEL):md.rfind(constants.CAND_END_DEL)]
 
     info = info.strip('-').strip('\n')
+    info = AT_VALUE.sub(r"\1'\2'", info)
 
     return parse_yaml_from_string(info)
 
