@@ -109,6 +109,10 @@ class Election(Meta):
         self.election['key'] = self.key
         self.election['description'] = self.description()
         self.election['results'] = self.results()
+        # GitHub logins are case-insensitive; compare against lowercased lists.
+        # See: https://github.com/elekto-dev/elekto/issues/84
+        self.election['election_officers'] = [
+            str(o).lower() for o in self.election.get('election_officers') or []]
 
         if 'exception_due' not in self.election.keys():
             self.election['exception_due'] = self.election['start_datetime']
@@ -133,7 +137,11 @@ class Election(Meta):
         return utils.parse_md(os.path.join(self.path, Election.RES))
 
     def voters(self):
-        return utils.parse_yaml(os.path.join(self.path, Election.VOT))
+        voters = utils.parse_yaml(os.path.join(self.path, Election.VOT))
+        if voters:
+            voters['eligible_voters'] = [
+                str(v).lower() for v in voters.get('eligible_voters') or []]
+        return voters
         
     def showfields(self):
         # FIXME: show_candidate_fields could be None (as is the case in the name_the_app example meta), leading to an

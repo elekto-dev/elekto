@@ -18,6 +18,7 @@ import flask as F
 import base64
 
 from datetime import datetime, timedelta
+from sqlalchemy import func
 from authlib.integrations.requests_client import OAuth2Session
 
 from elekto import constants, APP, SESSION
@@ -112,7 +113,10 @@ def oauth_github_redirect():
     else:
         data = resp.json()
         expries = datetime.now() + timedelta(days=1)
-        query = SESSION.query(User).filter_by(username=data['login']).first()
+        # Match case-insensitively so a login whose case changed keeps its account (and its vote).
+        # See: https://github.com/elekto-dev/elekto/issues/84
+        query = SESSION.query(User).filter(
+            func.lower(User.username) == data['login'].lower()).order_by(User.id).first()
         if query:
             query.token = token['access_token']
             query.token_expires_at = expries

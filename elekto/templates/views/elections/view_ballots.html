@@ -23,7 +23,7 @@
             <span class="text-muted mr-5px">|</span>
             <small class="badge mr-5px badge-{{  election['status'] }} ">{{ election['status'] }}</small>
             <span class="text-muted mr-5px">|</span>
-            {% if g.user.username in voters['eligible_voters'] %}
+            {% if g.user.username|lower in voters['eligible_voters'] %}
             <small class="badge badge-blue ">eligible</small>
             {% else %}
             <small class="badge badge-blue">Not eligible</small>
@@ -54,7 +54,7 @@
             {% endfor %}
         </div>
         <p class="disclaimer space-lr mt-1rem">
-          {% if election['status'] == 'running' and g.user.username in voters['eligible_voters'] %}
+          {% if election['status'] == 'running' and g.user.username|lower in voters['eligible_voters'] %}
               {% if g.user.id in voted %}
                   You have cast your vote.
               {% else %}
@@ -63,7 +63,7 @@
           {% endif %}
             Voting starts at <b>{{ election['start_datetime'] }} UTC</b> and ends at
             <b>{{ election['end_datetime'] }} UTC</b>.
-            {% if g.user.username not in voters['eligible_voters'] %}
+            {% if g.user.username|lower not in voters['eligible_voters'] %}
                 If you wish to participate in the election, please fill the
                 <a href="{{ url_for('elections_exception', eid=election['key']) }}"><b>exception form</b></a>
                 before <b>{{ election['exception_due'] }}</b>.
@@ -73,7 +73,7 @@
 
     <div class="space--md pt-0">
         <div class="space-lr row">
-            {% if election['status'] == 'running' and g.user.username in voters['eligible_voters'] %}
+            {% if election['status'] == 'running' and g.user.username|lower in voters['eligible_voters'] %}
                 {% if g.user.id not in voted %}
                 <div class="col-md-2 pr-0">
                     <a href="{{ url_for('elections_voting_page', eid=election['key'])}}" class="btn btn-dark pl-3rem pr-3rem">Vote</a>
@@ -93,7 +93,7 @@
                 {% endif %}
             {% endif %}
             <div class="col-md-6
-                {% if election['status'] == 'running' and g.user.username in voters['eligible_voters'] %}
+                {% if election['status'] == 'running' and g.user.username|lower in voters['eligible_voters'] %}
                 pl-0
                 {% endif %}
                 ">
@@ -105,7 +105,7 @@
                     {% endif %}
                 {% endif %}
 
-                {% if g.user.username in election['election_officers'] %}
+                {% if g.user.username|lower in election['election_officers'] %}
                 <a href="{{ url_for('elections_admin', eid=election['key'])}}" class="btn btn-dark">Admin</a>
                 {% endif %}
             </div>

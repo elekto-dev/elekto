@@ -235,6 +235,44 @@ def test_election_detail_running_user_is_admin(client: FlaskClient, load_metadir
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
+#          GitHub logins are matched case-insensitively. See: https://github.com/elekto-dev/elekto/issues/84           #
+# -------------------------------------------------------------------------------------------------------------------- #
+@freeze_time('2023-08-04')
+@pytest.mark.parametrize('username', [
+    'Kalkayan',          # voters.yaml lists "kalkayan"
+    'sergeykanzhelev',   # voters.yaml lists "SergeyKanzhelev"
+])
+def test_eligibility_ignores_login_case(username: str, client: FlaskClient, load_metadir):
+    provision_session(client, token='...', username=username)
+
+    response = client.get('/app/elections/name_the_app')
+    assert response.status_code == 200
+    disclaimer = BeautifulSoup(response.data, 'html.parser').find('p', attrs={'class': 'disclaimer space-lr mt-1rem'})
+    assert 'You have not yet voted in this election.' in disclaimer.text
+
+    assert client.get('/app/elections/name_the_app/vote').status_code == 200
+
+
+@freeze_time('2023-08-04')
+def test_officer_access_ignores_login_case(client: FlaskClient, load_metadir):
+    provision_session(client, token='...', username='JBerkus')  # election.yaml lists "jberkus"
+
+    response = client.get('/app/elections/name_the_app')
+    soup = BeautifulSoup(response.data, 'html.parser')
+    assert soup.find('a', text='Admin', attrs={'href': '/app/elections/name_the_app/admin/'}) is not None
+
+    assert client.get('/app/elections/name_the_app/admin/').status_code == 200
+
+
+@freeze_time('2023-08-01')
+def test_exception_form_ignores_login_case(client: FlaskClient, load_metadir):
+    provision_session(client, token='...', username='Kalkayan')
+
+    response = client.get('/app/elections/name_the_app/exception', follow_redirects=True)
+    assert b'You are already eligible to vote in the election.' in response.data
+
+
+# -------------------------------------------------------------------------------------------------------------------- #
 #                                      /app/elections/<eid>/candidates/<cid>                                           #
 # -------------------------------------------------------------------------------------------------------------------- #
 def test_elections_candidate(client: FlaskClient, load_metadir):

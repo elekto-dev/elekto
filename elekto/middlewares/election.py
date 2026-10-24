@@ -30,7 +30,7 @@ def admin_guard(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'eid' not in kwargs.keys() or F.g.user.username \
+        if 'eid' not in kwargs.keys() or F.g.user.username.lower() \
                 not in meta.Election(kwargs['eid']).get()['election_officers']:
             F.flash('You are not an Election officer')
             return F.abort(401)
@@ -51,7 +51,7 @@ def voter_guard(f):
         election = meta.Election(kwargs['eid'])
         voters = election.voters()
 
-        if F.g.user.username not in voters['eligible_voters']:
+        if F.g.user.username.lower() not in voters['eligible_voters']:
             return F.render_template('errors/not_eligible.html',
                                      election=election.get())
         return f(*args, **kwargs)
@@ -75,7 +75,7 @@ def exception_guard(f):
             F.flash('Not accepting any exception request.')
             return F.redirect(F.url_for('elections_single', eid=kwargs['eid']))
 
-        if F.g.user.username in voters['eligible_voters']:
+        if F.g.user.username.lower() in voters['eligible_voters']:
             F.flash('You are already eligible to vote in the election.')
             return F.redirect(F.url_for('elections_single', eid=kwargs['eid']))
 

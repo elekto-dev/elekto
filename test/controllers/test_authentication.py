@@ -3,12 +3,13 @@ import urllib.parse
 from unittest import mock
 
 from flask.testing import FlaskClient
+from freezegun import freeze_time
 
 from elekto import APP, SESSION
 from elekto.models.sql import User
 
 from .mocks import MockUserResponse, MockTokenResponse
-from .utils import get_csrf_token, is_authenticated, provision_session, create_user, user_exists
+from .utils import get_csrf_token, is_authenticated, provision_session, create_user, user_exists, vote
 
 
 def test_login_renders(client: FlaskClient):
@@ -224,3 +225,26 @@ def test_github_login_fails_user_not_found(get_mock, fetch_token_mock, generate_
 
 
 # TODO: Add tests that check case sensitivity in GitHub usernames. GitHub's usernames are case-insensitive, but Elekto does consider these case-sensitive. This is far from the only place in the codebase to test for case-sensitivity, but it's a start.
+
+
+@freeze_time('2023-08-04')
+@mock.patch('authlib.oauth2.client.generate_token')
+@mock.patch('authlib.oauth2.client.OAuth2Client.fetch_token')
+@mock.patch('requests.sessions.Session.get')
+def test_github_login_ignores_login_case_for_existing_user(get_mock, fetch_token_mock, generate_token_mock,
+                                                           client: FlaskClient, load_metadir):
+    """A user whose GitHub login changed case keeps their existing account, and therefore their vote."""
+    oauth_token = 'fooBar42!'
+    create_user(oauth_token, username='Kalkayan')
+    vote('Kalkayan', 'name_the_app')
+    get_mock.return_value = MockUserResponse(json={'login': 'kalkayan', 'name': 'Kalkayan', 'access_token': '...'})
+    fetch_token_mock.return_value = MockTokenResponse(json={'access_token': oauth_token}).json()
+    csrf_token = get_csrf_token(client)
+    generate_token_mock.return_value = csrf_token
+
+    client.post('/oauth/github/login', data={'csrf_token': csrf_token})
+    assert client.get(f'/oauth/github/callback?state={csrf_token}').status_code == 302
+
+    with APP.app_context():
+        assert [u.username for u in SESSION.query(User).all()] == ['Kalkayan']
+    assert b'You have cast your vote.' in client.get('/app/elections/name_the_app').data

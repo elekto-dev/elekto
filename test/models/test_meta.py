@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
+import yaml
 from freezegun import freeze_time
 
 from elekto import APP
@@ -66,6 +67,25 @@ def test_election_build_exception_due_date_default(election):
 def test_election_status_upcoming(mock_date, expected_status, election):
     with freeze_time(mock_date):
         assert election.status() == expected_status
+
+
+def test_voters_are_lowercased_strings(election):
+    # YAML reads an all-digit GitHub login (e.g. 249043822) as an int
+    with open(os.path.join(election.path, 'voters.yaml'), 'w') as f:
+        f.write('eligible_voters:\n  - SergeyKanzhelev\n  - 249043822\n')
+
+    assert election.voters()['eligible_voters'] == ['sergeykanzhelev', '249043822']
+
+
+def test_election_officers_are_lowercased_strings(election):
+    path = os.path.join(election.path, 'election.yaml')
+    with open(path) as f:
+        config = yaml.safe_load(f)
+    config['election_officers'] = ['JBerkus', 12345]
+    with open(path, 'w') as f:
+        yaml.safe_dump(config, f)
+
+    assert election.build()['election_officers'] == ['jberkus', '12345']
 
 
 def test_show_fields_empty(election):
