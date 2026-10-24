@@ -46,5 +46,5 @@ def test_public_election(client: FlaskClient, load_metadir):
 
 
 def test_health_check(client: FlaskClient):
-    response = client.get('/healthcheck')
+    response = client.get('/health')
     assert response.status_code == 200

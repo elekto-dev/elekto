@@ -143,7 +143,7 @@ def test_list_elections_with_status(status: str, n_elections: int, client: Flask
 def test_election_detail_not_found(client: FlaskClient):
     provision_session(client, token='...')
     response = client.get(f'/app/elections/12345')
-    assert response.status_code == 200  # Status code is HTTP200, despite the message being a Server Error.
+    assert response.status_code == 500
     soup = BeautifulSoup(response.data, 'html.parser')
     title_text = soup.find('title').text.strip()
     assert title_text == '500 - Server Error | Elekto'
@@ -585,7 +585,7 @@ def test_elections_admin_review_cycle(client: FlaskClient, load_metadir):
 
     # Test a non-existent Request ID is accepted and causes an error.
     response = client.get('/app/elections/2021---GB/admin/exception/0')
-    assert response.status_code == 200
+    assert response.status_code == 500
     soup = BeautifulSoup(response.data, 'html.parser')
     title_text = soup.find('title').text.strip()
     assert title_text == '500 - Server Error | Elekto'

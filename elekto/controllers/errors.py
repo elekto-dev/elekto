@@ -27,17 +27,17 @@ from elekto import APP
 
 @APP.errorhandler(404)
 def not_found(e):
-    return F.render_template('/errors/404.html')
+    return F.render_template('/errors/404.html'), 404
 
 
 @APP.errorhandler(401)
 def unauthorized(e):
-    return F.render_template('/errors/401.html')
+    return F.render_template('/errors/401.html'), 401
 
 
 @APP.errorhandler(500)
 def server_error(e):
-    return F.render_template('/errors/500.html')
+    return F.render_template('/errors/500.html'), 500
 
 
 @APP.errorhandler(CSRFError)
