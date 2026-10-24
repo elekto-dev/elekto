@@ -102,6 +102,19 @@ python console --run
 python console --port 8080 --host 0.0.0.0 --run
 ```
 
+#### Run with Docker Compose
+
+To run the app and a Postgres database together, create a `.env` file and set `APP_KEY` and `META_SECRET`.
+Signing in needs a GitHub OAuth app, so also set `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`; public pages work
+without them. The database settings in `.env` are overridden to use the Compose database.
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Then open http://localhost:5000.
+
 ### Running tests
 Commands are available to run the test suite. This suite currently only consists of unit tests. A prerequisite for 
 running the test suite is that you have a virtualenv setup. This can be done by running `make venv`. To run the tests,
