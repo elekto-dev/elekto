@@ -11,7 +11,11 @@ env:
 
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
   docker-build:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -51,3 +55,36 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  # Opens (or updates) a PR in kubernetes/k8s.io that points elections.k8s.io at this commit's
+  # image. An OWNER of kubernetes/gke-aaa/elekto still approves it; ArgoCD deploys on merge.
+  # Steps live in `make deploy` (see Makefile); this job only sets up the bot's identity.
+  bump-k8s-io:
+    needs: docker-build
+    if: github.repository == 'elekto-dev/elekto'
+    runs-on: ubuntu-latest
+    concurrency: bump-k8s-io
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ secrets.K8S_IO_BUMP_TOKEN }}
+      SIGNING_KEY: ${{ secrets.K8S_IO_BUMP_SIGNING_KEY }}
+      K8S_IO_FORK: ${{ vars.K8S_IO_FORK }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: env.GH_TOKEN != '' && env.K8S_IO_FORK != ''
+      - name: Open or update the k8s.io PR
+        if: env.GH_TOKEN != '' && env.K8S_IO_FORK != ''
+        run: |
+          gh auth setup-git
+          login=$(gh api user -q .login)
+          git config --global user.name "$login"
+          git config --global user.email "$(gh api user -q .id)+$login@users.noreply.github.com"
+          if [ -n "$SIGNING_KEY" ]; then
+            install -m 600 /dev/null "$RUNNER_TEMP/signing_key"
+            printf '%s\n' "$SIGNING_KEY" > "$RUNNER_TEMP/signing_key"
+            git config --global gpg.format ssh
+            git config --global user.signingkey "$RUNNER_TEMP/signing_key"
+            git config --global commit.gpgsign true
+          fi
+          make deploy SHA="$GITHUB_SHA" BUILD_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

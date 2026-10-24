@@ -26,3 +26,5 @@ test/*.db
 test/meta
 
 *.db
+# make k8s-io-bump checkout
+/.k8s.io/
