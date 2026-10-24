@@ -1,0 +1,19 @@
+# Local configuration and secrets. Without this, `ADD . /app` copies .env into
+# the image, and utils.py loads it with override=True, replacing the values
+# passed to the container (for example by docker compose).
+.env
+.env.testing
+
+# Local development artifacts
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+htmlcov/
+.coverage
+*.egg-info/
+build/
+dist/
+
+# .git is intentionally kept: the version is derived from git tags at build time.
