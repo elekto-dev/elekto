@@ -19,9 +19,7 @@ jinja2==3.1.5
 markdown2==2.5.2
 markupsafe==3.0.2
 mysqlclient==2.2.7
-numpy==2.2.2
 packaging==24.2
-pandas==2.2.3
 pluggy==1.5.0
 psycopg2==2.9.10
 pycparser==2.22

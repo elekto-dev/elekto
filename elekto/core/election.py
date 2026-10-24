@@ -16,7 +16,6 @@
 
 from typing import TYPE_CHECKING, List
 from .types import BallotType
-from pandas import DataFrame
 from elekto.core import schulze_d, schulze_p, schulze_rank
 
 if TYPE_CHECKING:
@@ -56,15 +55,16 @@ class Election:
         return Election(candidates, pref)
 
     @ staticmethod
-    def from_csv(df: DataFrame, no_winners: int):
-        candidates = list(df.columns)
+    def from_csv(data: dict, no_winners: int):
+        candidates = list(data.keys())
         ballots: BallotType = {}
+        row_count = len(next(iter(data.values()), []))
 
-        for v, row in df.iterrows():
+        for v in range(row_count):
             ballots[v] = []
             for c in candidates:
-                if row[c] == Election.NO_OPINION:
+                if data[c][v] == Election.NO_OPINION:
                     continue
-                ballots[v].append((c, int(row[c])))
+                ballots[v].append((c, int(data[c][v])))
 
         return Election(candidates, ballots, no_winners)
