@@ -64,8 +64,7 @@
                   You have not yet voted in this election.
               {% endif %}
           {% endif %}
-            Voting starts at <b>{{ election['start_datetime'] }} UTC</b> and ends at
-            <b>{{ election['end_datetime'] }} UTC</b>.
+            {% include "components/voting_period.html" %}
             {% if g.user.username not in voters['eligible_voters'] %}
                 If you wish to participate in the election, please fill the
                 <a href="{{ url_for('elections_exception', eid=election['key']) }}"><b>exception form</b></a>

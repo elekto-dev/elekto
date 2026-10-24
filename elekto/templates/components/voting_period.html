@@ -1,0 +1,10 @@
+{% if election['status'] == 'completed' %}
+    Voting started at <b>{{ election['start_datetime'] }} UTC</b> and ended at
+    <b>{{ election['end_datetime'] }} UTC</b>.
+{% elif election['status'] == 'upcoming' %}
+    Voting starts at <b>{{ election['start_datetime'] }} UTC</b> and ends at
+    <b>{{ election['end_datetime'] }} UTC</b>.
+{% else %}
+    Voting started at <b>{{ election['start_datetime'] }} UTC</b> and is open until
+    <b>{{ election['end_datetime'] }} UTC</b>.
+{% endif %}

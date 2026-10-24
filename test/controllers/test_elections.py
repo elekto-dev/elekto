@@ -234,6 +234,27 @@ def test_election_detail_running_user_is_admin(client: FlaskClient, load_metadir
     assert soup.find('a', text='Admin', attrs={'class': 'btn btn-dark', 'href': '/app/elections/name_the_app/admin/'}) is not None
 
 
+@pytest.mark.parametrize(
+    'frozen_date,expected',
+    [
+        ('2023-08-01', 'Voting starts at 2023-08-02 00:00:00 UTC and ends at 2023-08-28 23:59:00 UTC.'),
+        ('2023-08-04', 'Voting started at 2023-08-02 00:00:00 UTC and is open until 2023-08-28 23:59:00 UTC.'),
+        ('2023-09-01', 'Voting started at 2023-08-02 00:00:00 UTC and ended at 2023-08-28 23:59:00 UTC.'),
+    ],
+    ids=['upcoming', 'running', 'completed'],
+)
+def test_election_detail_voting_period(frozen_date: str, expected: str, client: FlaskClient, load_metadir):
+    """The voting period sentence uses the tense that matches the election status."""
+    with freeze_time(frozen_date):
+        provision_session(client, token='...', username='kalkayan')
+        response = client.get('/app/elections/name_the_app')
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.data, 'html.parser')
+
+    disclaimer_text = ' '.join(soup.find('p', attrs={'class': 'disclaimer space-lr mt-1rem'}).text.split())
+    assert expected in disclaimer_text
+
+
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                      /app/elections/<eid>/candidates/<cid>                                           #
 # -------------------------------------------------------------------------------------------------------------------- #
