@@ -173,8 +173,11 @@ class Election(Meta):
         # return only the candidate optional fields that are listed in show_candidate_fields
         # unfilled fields are returned as '' so the label still displays
         candidate['fields'] = self.showfields()
-        for info in candidate['info']:
-            field = list(info.keys())[0]
+        # info may be a mapping or a list of one-key mappings
+        info = candidate.get('info') or {}
+        if isinstance(info, list):
+            info = {k: v for item in info for k, v in item.items()}
+        for field, value in info.items():
             if field in candidate['fields']:
-                candidate['fields'][field] = info[field]
+                candidate['fields'][field] = value
         return candidate

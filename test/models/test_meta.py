@@ -173,3 +173,28 @@ def test_candidate_show_no_fields(election):
     assert candidate['key'] == 'e6n'
     assert candidate['info'] == [{'Language': 'Leetspeak'}]
     assert candidate['fields'] == {}
+
+
+def write_candidate(election, cid: str, info_block: str) -> None:
+    sep = '-' * 61
+    with open(os.path.join(election.path, f'candidate-{cid}.md'), 'w') as f:
+        f.write(f'{sep}\nname: {cid}\nID: {cid}\n{info_block}{sep}\n\nBio.\n')
+
+
+@pytest.mark.parametrize('info_block', [
+    'info:\n  employer: Acme\n  slack: alice\n',
+    'info:\n  - employer: Acme\n  - slack: alice\n',
+])
+def test_candidate_info_formats(election, info_block):
+    election.election['show_candidate_fields'] = ['employer', 'slack']
+    write_candidate(election, 'alice', info_block)
+
+    assert election.candidate('alice')['fields'] == {'employer': 'Acme', 'slack': 'alice'}
+
+
+@pytest.mark.parametrize('info_block', ['', 'info:\n'])
+def test_candidate_info_missing(election, info_block):
+    election.election['show_candidate_fields'] = ['employer']
+    write_candidate(election, 'alice', info_block)
+
+    assert election.candidate('alice')['fields'] == {'employer': ''}
