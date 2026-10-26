@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "elekto"
+dynamic = ["version"]
+description = "Elections for open source communities, using GitHub accounts"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [{ name = "The Elekto Authors" }]
+requires-python = ">=3.11"
+dependencies = [
+    "authlib>=1.4.0",
+    "flask>=3.1.0",
+    "flask-wtf>=1.2.2",
+    "markdown2>=2.5.2",
+    "pandas>=2.2.3",  # only used by Election.from_csv; removed by #134
+    "pynacl>=1.5.0",
+    "python-dotenv>=1.0.1",
+    "pyyaml>=6.0.2",
+    "requests>=2.32.3",
+    "sqlalchemy>=1.4.49,<2.0",  # 2.0 needs the migration tracked in #94
+]
+
+[project.optional-dependencies]
+mysql = ["mysqlclient>=2.2.7"]
+postgres = ["psycopg2>=2.9.10"]
+server = ["uwsgi>=2.0.28"]
+
+[project.urls]
+Homepage = "https://elekto.dev"
+Source = "https://github.com/elekto-dev/elekto"
+
+[tool.setuptools.packages.find]
+include = ["elekto*"]
+
+[tool.setuptools.package-data]
+elekto = ["templates/**/*", "static/**/*"]
+
+[tool.setuptools_scm]
+fallback_version = "0.0.0+unknown"

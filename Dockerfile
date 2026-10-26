@@ -7,6 +7,8 @@ RUN pip install -r requirements.txt
 
 ADD . /app
 
+RUN pip install --no-deps -e .
+
 USER 10017
 
 ENTRYPOINT ["./entrypoint.sh"]
